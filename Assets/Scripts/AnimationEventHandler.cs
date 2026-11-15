@@ -1,10 +1,11 @@
-using System.Collections;
 using UnityEngine;
 
 public class AnimationEventHandler : MonoBehaviour
 {
-    public bool isAttacking;
-    public bool isBlocking;
+    public bool isAttackingPlayer;
+    public bool isBlockingPlayer;
+    public bool isAttackingEnemy;
+    public bool isBlockingEnemy;
     public static AnimationEventHandler Instance;
     private CharacterController characterController;
 
@@ -15,37 +16,57 @@ public class AnimationEventHandler : MonoBehaviour
             Instance = this;
         }
         // Set all animation event related variables to their default values
-        isAttacking = false;
-        isBlocking = false;
+        isAttackingPlayer = false;
+        isBlockingPlayer = false;
+        isAttackingEnemy = false;
+        isBlockingEnemy = false;
 
         characterController = GetComponentInParent<CharacterController>();
     }
 
-    public void SetIsAttacking(int value)
+    public void SetIsAttackingPlayer(int value)
     {
         if(value == 1)
-            isAttacking = true;
+            isAttackingPlayer = true;
         else if(value == 0)
-            isAttacking = false;  
+            isAttackingPlayer = false;  
     }
 
-    public void SetIsBlocking(int value)
+    public void SetIsBlockingPlayer(int value)
     {
         if(value == 1)
-            isBlocking = true;
+            isBlockingPlayer = true;
         else if(value == 0)
-            isBlocking = false;
+            isBlockingPlayer = false;
+    }
+
+    public void SetIsAttackingEnemy(int value)
+    {
+        if(value == 1)
+            isAttackingEnemy = true;
+        else if(value == 0)
+            isAttackingEnemy = false;  
+    }
+
+    public void SetIsBlockingEnemy(int value)
+    {
+        if(value == 1)
+            isBlockingEnemy = true;
+        else if(value == 0)
+            isBlockingEnemy = false;
     }
 
     public void OnAttackAnimationFinished()
     {
         Debug.Log("Finished Attack");
-        isAttacking = false;
+        isAttackingPlayer = false;
         if (characterController != null)
             characterController.enabled = true;
         PlayerController.Instance.SetCanSwapWeapons(true);
     }
 
-    public bool GetIsAttacking() => isAttacking;
-    public bool GetIsBlocking() => isBlocking;
+    public bool GetIsAttackingPlayer() => isAttackingPlayer;
+    public bool GetIsBlockingPlayer() => isBlockingPlayer;
+    public bool GetIsAttackingEnemy() => isAttackingEnemy;
+    public bool GetIsBlockingEnemy() => isBlockingEnemy;
 }
