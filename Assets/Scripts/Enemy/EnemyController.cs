@@ -5,20 +5,21 @@ public class EnemyController : MonoBehaviour
 {
     private static readonly int DieHash = Animator.StringToHash("Die");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int AttackSpeedHash = Animator.StringToHash("AttackSpeed");
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
 
     [SerializeField] public Transform[] waypoints;
     [SerializeField] private GameObject player;
 
     [Header("Speed Settings")]
-    [SerializeField] private float patrolSpeed = 1f;
-    [SerializeField] private float chaseSpeed = 4f;
-    [SerializeField] private float fleeSpeed = 4f;
+    [SerializeField] private float patrolSpeed;
+    [SerializeField] private float chaseSpeed;
+    [SerializeField] private float fleeSpeed;
 
     [Header("Combat")]
-    [SerializeField] private float meleeRange = 1f;
-    [SerializeField] private float attackSpeed = 1;
-    [SerializeField] private float attackCooldown = 2.5f;
+    [SerializeField] private float meleeRange;
+    [SerializeField] private float attackSpeed;
+    [SerializeField] private float attackCooldown;
     public AIState currentState;
     private EnemyState enemyState;
     private NavMeshAgent agent;
@@ -31,8 +32,6 @@ public class EnemyController : MonoBehaviour
     private bool leftPatrol = false;
     private bool isAttacking = false;
     private CharacterController characterController;
-    public string AttackSpeedHash { get; private set; }
-
     void Awake()
     {
         agent = gameObject.GetComponent<NavMeshAgent>();
@@ -100,20 +99,37 @@ public class EnemyController : MonoBehaviour
             SetNextWaypoint();
         }
     }
+    
     void Chase()
     {
+        distance = Vector3.Distance(
+            transform.position,
+            player.transform.position
+        );
+
         leftPatrol = true;
-        agent.SetDestination(player.transform.position);
-        if (Time.time >= nextAttackTime)
+
+        if (distance <= meleeRange)
         {
-            if (distance <= meleeRange && playerState.GetHealth() > 0)
+            agent.ResetPath();
+            agent.isStopped = true;
+
+            animator.SetFloat(SpeedHash, 0f);
+
+            if (Time.time >= nextAttackTime &&
+                playerState.GetHealth() > 0)
             {
-                animator.SetTrigger(AttackHash);
                 Attack();
-                nextAttackTime = Time.time + attackCooldown;
             }
         }
+        else
+        {
+            agent.isStopped = false;
+            agent.speed = chaseSpeed;
+            agent.SetDestination(player.transform.position);
+        }
     }
+
     void Flee()
     {
         leftPatrol = true;
@@ -121,34 +137,37 @@ public class EnemyController : MonoBehaviour
         Vector3 destination = transform.position + fleeDir.normalized * 10;
         agent.SetDestination(destination);
     }
-
+    
     public void Attack()
     {
-        Debug.Log("Attacking");
-        if (isAttacking)
+        if (isAttacking || distance > meleeRange)
             return;
-        
-        characterController.enabled = false;
-        
-        agent.speed = 0;
+
+        Debug.Log("Attacking!");
 
         isAttacking = true;
+        nextAttackTime = Time.time + attackCooldown;
+
+        agent.isStopped = true;
+        agent.ResetPath();
+
+        characterController.enabled = false;
 
         animator.SetFloat(SpeedHash, 0f);
-
         animator.SetFloat(AttackSpeedHash, attackSpeed);
-
         animator.SetTrigger(AttackHash);
 
         playerState.ReduceHealth(enemyState.GetStrength());
-        
+
         Invoke(nameof(FinishAttack), attackCooldown);
-
     }
-
+    
     private void FinishAttack()
     {
         isAttacking = false;
+
+        characterController.enabled = true;
+        agent.isStopped = false;
     }
 
     void Die()
