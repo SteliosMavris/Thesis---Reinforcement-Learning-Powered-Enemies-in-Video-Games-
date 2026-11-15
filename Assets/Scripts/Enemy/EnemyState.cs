@@ -53,7 +53,7 @@ public class EnemyState : MonoBehaviour
     }
     */
 
-    public void TakeDamage(int damage)
+    public void ReduceHealth(int damage)
     {
         health-=damage;
         if (health <= 0)
@@ -70,5 +70,6 @@ public class EnemyState : MonoBehaviour
 
     public int GetHealth() => health;
     public int GetStrength() => strength;
+    public float GetDistance() => distance;
     public AIState GetState() => currentState;
 }
