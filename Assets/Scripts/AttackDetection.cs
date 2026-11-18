@@ -1,11 +1,14 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class AttackDetection : MonoBehaviour
 {
-    private bool appliedDamage;
+    public bool appliedDamage;
+    public bool damageBlocked;
     void Awake()
     {
         appliedDamage = false;
+        damageBlocked = false;
     }
 
     void Start()
@@ -13,23 +16,81 @@ public class AttackDetection : MonoBehaviour
         
     }
 
-    void OnTriggerStay(Collider other)
-        {
-            // Detect for enemy weapon collisions and inflict damage
-            if(AnimationEventHandler.Instance.GetIsAttacking() == true 
-                && other.gameObject.CompareTag("Enemy")
-                && other.GetType() == typeof(CapsuleCollider) 
-                && !appliedDamage)
-            {                   
-                
-                EnemyState enemy = other.gameObject.GetComponent<EnemyState>();
-                Debug.Log("Detected Attack!");
-                enemy.TakeDamage(WeaponManager.Instance.GetWeaponDamage());
-                appliedDamage = true;
-            }
-        }
-    void OnTriggerExit(Collider other)
+    
+    private void OnTriggerStay(Collider other)
     {
-        appliedDamage = false;
+        string targetTag = "";
+        bool isAttacking = false;
+
+        // Identify attacker
+        if (GetComponentInParent<PlayerState>() != null)
+        {
+            targetTag = "Enemy";
+            isAttacking = AnimationEventHandler.Instance.GetIsAttackingPlayer();
+        }
+        else if (GetComponentInParent<EnemyState>() != null)
+        {
+            targetTag = "Player";
+            isAttacking = AnimationEventHandler.Instance.GetIsAttackingEnemy();
+        }
+
+        if (!isAttacking || damageBlocked || appliedDamage)
+            return;
+
+        // Check shieldbox
+        if (other.CompareTag("Shieldbox"))
+        {
+            bool isBlocking = false;
+
+            if (other.GetComponentInParent<PlayerState>() != null)
+                isBlocking = AnimationEventHandler.Instance.GetIsBlockingPlayer();
+
+            else if (other.GetComponentInParent<EnemyState>() != null)
+                isBlocking = AnimationEventHandler.Instance.GetIsBlockingEnemy();
+
+            if (isBlocking)
+            {
+                damageBlocked = true;
+                Debug.Log("Attack Blocked!");
+            }
+
+            return;
+        }
+
+        // Check hurtbox
+        if (other.CompareTag(targetTag) && other is CapsuleCollider)
+        {
+            if (targetTag == "Enemy")
+            {
+                EnemyState enemy = other.GetComponentInParent<EnemyState>();
+
+                if (enemy != null)
+                {
+                    enemy.ReduceHealth(WeaponManager.Instance.GetWeaponDamage());
+                    Debug.Log("Attacked Enemy");
+                }
+            }
+            else if (targetTag == "Player")
+            {
+                PlayerState player = other.GetComponentInParent<PlayerState>();
+                EnemyState enemy = GetComponentInParent<EnemyState>();
+
+                if (player != null && enemy != null)
+                {
+                    player.ReduceHealth(enemy.GetStrength());
+                    Debug.Log("Attacked Player");
+                }
+            }
+
+            appliedDamage = true;
+        }
     }
+
+    public static void ResetAttack(AttackDetection thisGameobject)
+    {
+        thisGameobject.appliedDamage = false;
+        thisGameobject.damageBlocked = false;
+        Debug.Log("Reset Attack");
+    }
+
 }
