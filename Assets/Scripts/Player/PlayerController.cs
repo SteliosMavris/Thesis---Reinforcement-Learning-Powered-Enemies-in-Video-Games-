@@ -91,8 +91,8 @@ public class PlayerController : MonoBehaviour
             
         }
 
-        isAttacking = AnimationEventHandler.Instance.GetIsAttacking();
-        isBlocking = AnimationEventHandler.Instance.GetIsBlocking();
+        isAttacking = AnimationEventHandler.Instance.GetIsAttackingPlayer();
+        isBlocking = AnimationEventHandler.Instance.GetIsBlockingPlayer();
 
         if(Mouse.current == null)
             return;
