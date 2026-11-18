@@ -157,8 +157,6 @@ public class EnemyController : MonoBehaviour
         animator.SetFloat(AttackSpeedHash, attackSpeed);
         animator.SetTrigger(AttackHash);
 
-        playerState.ReduceHealth(enemyState.GetStrength());
-
         Invoke(nameof(FinishAttack), attackCooldown);
     }
     
