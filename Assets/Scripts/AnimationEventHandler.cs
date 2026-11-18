@@ -7,21 +7,20 @@ public class AnimationEventHandler : MonoBehaviour
     public bool isAttackingEnemy;
     public bool isBlockingEnemy;
     public static AnimationEventHandler Instance;
-    private CharacterController characterController;
+    [SerializeField] private CharacterController characterControllerPlayer;
+    [SerializeField] private CharacterController characterControllerEnemy;
 
     void Awake()
     {
-        if(Instance == null)
-        {
+        if (Instance == null)
             Instance = this;
-        }
-        // Set all animation event related variables to their default values
+        else
+            Destroy(gameObject);
+
         isAttackingPlayer = false;
         isBlockingPlayer = false;
         isAttackingEnemy = false;
         isBlockingEnemy = false;
-
-        characterController = GetComponentInParent<CharacterController>();
     }
 
     public void SetIsAttackingPlayer(int value)
@@ -29,7 +28,12 @@ public class AnimationEventHandler : MonoBehaviour
         if(value == 1)
             isAttackingPlayer = true;
         else if(value == 0)
-            isAttackingPlayer = false;  
+        {
+            isAttackingPlayer = false;
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            AttackDetection attackDetection = player.GetComponentInChildren<AttackDetection>();
+            AttackDetection.ResetAttack(attackDetection);
+        } 
     }
 
     public void SetIsBlockingPlayer(int value)
@@ -45,7 +49,12 @@ public class AnimationEventHandler : MonoBehaviour
         if(value == 1)
             isAttackingEnemy = true;
         else if(value == 0)
-            isAttackingEnemy = false;  
+        {
+            isAttackingEnemy = false;
+            GameObject enemy = GameObject.FindGameObjectWithTag("Enemy");
+            AttackDetection attackDetection = enemy.GetComponentInChildren<AttackDetection>();
+            AttackDetection.ResetAttack(attackDetection);
+        }
     }
 
     public void SetIsBlockingEnemy(int value)
@@ -56,13 +65,21 @@ public class AnimationEventHandler : MonoBehaviour
             isBlockingEnemy = false;
     }
 
-    public void OnAttackAnimationFinished()
+    public void OnAttackAnimationFinishedPlayer()
     {
         Debug.Log("Finished Attack");
         isAttackingPlayer = false;
-        if (characterController != null)
-            characterController.enabled = true;
+        if (characterControllerPlayer != null)
+            characterControllerPlayer.enabled = true;
         PlayerController.Instance.SetCanSwapWeapons(true);
+    }
+
+    public void OnAttackAnimationFinishedEnemy()
+    {
+        Debug.Log("Finished Attack");
+        isAttackingEnemy = false;
+        if (characterControllerEnemy != null)
+            characterControllerEnemy.enabled = true;
     }
 
     public bool GetIsAttackingPlayer() => isAttackingPlayer;
